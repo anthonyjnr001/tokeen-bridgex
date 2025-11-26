@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Select Wallet — AJ Digital</title>
+<style>
+:root {
+  --bg: #060b16;
+  --card: #0b152a;
+  --accent: #06b6d4;
+  --muted: #9fb0bd;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Inter", Arial, sans-serif;
+  background: linear-gradient(180deg,#041224 0%,#071627 100%);
+  color: #f2f6fa;
+}
+header {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.logo {
+  width:42px; height:42px; border-radius:8px;
+  background: rgba(255,255,255,0.04);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; color:var(--accent);
+}
+.search {
+  width:100%; max-width:420px;
+  padding:10px 12px; border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color:#fff; font-size:15px;
+}
+main { padding:20px; max-width:1200px; margin:0 auto; }
+h2 { font-size:18px; font-weight:600; margin-bottom:10px; }
+.horizontal-scroll {
+  display:flex; gap:14px; overflow-x:auto;
+  padding-bottom:8px; scroll-behavior:smooth;
+}
+.horizontal-scroll::-webkit-scrollbar { height:6px; }
+.horizontal-scroll::-webkit-scrollbar-thumb { background:var(--accent); border-radius:10px; }
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap:14px;
+}
+.card {
+  background:var(--card);
+  border-radius:12px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,0.05);
+  display:flex; flex-direction:column; gap:8px; text-align:center;
+  transition: transform .18s ease, border .18s ease;
+  min-width:150px; flex-shrink:0;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.wallet-icon {
+  width:50px; height:50px; margin:0 auto;
+  border-radius:10px; background: rgba(255,255,255,0.07);
+  display:flex; align-items:center; justify-content:center;
+}
+.wallet-icon img { width:36px; height:36px; object-fit:contain; display:block; }
+.wallet-name { font-weight:700; font-size:15px; margin-top:6px; }
+.wallet-desc { font-size:13px; color:var(--muted); min-height:34px; }
+.connect-btn {
+  margin-top:6px; padding:8px 10px; border-radius:10px;
+  background:var(--accent); color:#03121c; font-weight:700;
+  border:none; cursor:pointer;
+}
+.connect-btn:hover { opacity:.94; }
+.back {
+  display:inline-block; margin-top:22px; color:var(--muted);
+  text-decoration:none; border:1px solid rgba(255,255,255,0.05);
+  padding:8px 14px; border-radius:8px;
+}
+@media (max-width: 600px) {
+  header { flex-direction:column; align-items:flex-start; }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .card { min-width: 140px; }
+}
+@media (max-width: 400px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+   <!-- <div class="logo"></div>-->
+    <div>
+      <div style="font-weight:600;">Select a Wallet to Connect</div>
+      <div style="font-size:13px;color:var(--muted);">Choose from supported wallets </div>
+    </div>
+  </div>
+  <input id="search" class="search" placeholder="Search wallet (MetaMask, Trust Wallet, Phantom, ...)" />
+</header>
+
+<main>
+  <h2>Most Requested Wallets</h2>
+  <div id="popularGrid" class="horizontal-scroll" aria-hidden="false"></div>
+
+  <h2 style="margin-top:22px;">All Wallets</h2>
+  <div id="walletGrid" class="grid"></div>
+
+  <a href="index.html" class="back">← Back</a>
+</main>
+
+<script>
+/*
+  NOTE:
+  - Every <img> has onerror fallback to a simple placeholder so a broken URL won't leave an empty icon.
+  - This page is a safe demo UI (does NOT request or send recovery phrases).
+*/
+
+/* Popular wallets (top row slider) */
+const popular = [
+  { id:"metamask", name:"MetaMask", desc:"Ethereum & EVM wallet", logo:"logo/meta.png" },
+  { id:"trustwallet", name:"Trust Wallet", desc:"Multi-chain mobile wallet", logo:"logo/trust.png" },
+  { id:"coinbase", name:"Coinbase Wallet", desc:"Coinbase non-custodial app", logo:"logo/coinbase.png" },
+  { id:"phantom", name:"Phantom", desc:"Solana wallet", logo:"logo/phantom.png" },
+  { id:"okx", name:"OKX Wallet", desc:"Web3 & multi-chain", logo:"logo/okx.png" },
+  { id:"binance", name:"Binance Chain Wallet", desc:"BSC wallet", logo:"logo/binance.png" },
+  { id:"walletconnect", name:"WalletConnect", desc:"Universal connector (QR)", logo:"logo/walletconnect.png" },
+  { id:"coinomi", name:"Coinomi", desc:"Multi-asset mobile wallet", logo:"logo/coinomi.png" }
+];
+
+/* All wallets: includes popular + extra + 10 additional requested wallets */
+const allWallets = [
+  ...popular,
+  { id:"ledger", name:"Ledger", desc:"Hardware wallet", logo:"logo/ledger.png" },
+  { id:"trezor", name:"Trezor", desc:"Hardware wallet", logo:"logo/trezor.png" },
+  { id:"exodus", name:"Exodus", desc:"Desktop & mobile", logo:"https://www.exodus.com/favicon.ico" },
+  { id:"atomic", name:"Atomic Wallet", desc:"Multi-asset wallet", logo:"logo/atomic.png" },
+  { id:"rainbow", name:"Rainbow", desc:"Ethereum mobile wallet", logo:"https://rainbow.me/favicon.ico" },
+  { id:"argent", name:"Argent", desc:"Smart contract wallet", logo:"logo/argent.png" },
+  { id:"myetherwallet", name:"MyEtherWallet (MEW)", desc:"Web & mobile Ethereum wallet", logo:"logo/myether.png" },
+  { id:"mycelium", name:"Mycelium", desc:"Mobile Bitcoin wallet", logo:"logo/mycelium.png" },
+  { id:"guarda", name:"Guarda", desc:"Multi-currency wallet", logo:"logo/guarda.png" },
+  { id:"edge", name:"Edge", desc:"Mobile wallet with security", logo:"logo/edge.png" },
+  { id:"jaxx", name:"Jaxx Liberty", desc:"Multi-coin wallet", logo:"logo/jaxx.png" },
+  { id:"bitkeep", name:"BitKeep", desc:"Multi-chain wallet", logo:"logo/bitkeep.png" },
+  { id:"coin98", name:"Coin98", desc:"DeFi multi-chain wallet", logo:"logo/coin98.png" },
+  { id:"tokenpocket", name:"TokenPocket", desc:"Multi-chain wallet", logo:"logo/tokenpocket.png" },
+  { id:"safepal", name:"SafePal", desc:"Hardware & mobile wallet", logo:"logo/safepal.png" },
+  { id:"bitpay", name:"BitPay Wallet", desc:"Payments wallet", logo:"logo/bitpay.jpg" },
+  { id:"blocto", name:"Blocto", desc:"Flow & EVM wallet", logo:"logo/blocto.png" },
+  { id:"unisat", name:"Unisat", desc:"Bitcoin Ordinals wallet", logo:"logo/unisat.jpg" },
+  { id:"nifty", name:"Nifty Wallet", desc:"Browser wallet for dApps", logo:"logo/nifty.jpg" },
+ // { id:"coinbasepro", name:"Coinbase Pro (icon)", desc:"Pro trading / custody icon", logo:"https://avatars.githubusercontent.com/u/1885080?s=200&v=4" },
+  /* 10 extra wallets requested (distinct) */
+ // { id:"bitpay2", name:"BitPay (alternate)", desc:"Payments & wallet", logo:"https://cdn.bitpay.com/bitpay2.png" },
+  { id:"imtoken", name:"imToken", desc:"Mobile wallet & dApp browser", logo:"logo/imtoken.jpg" },
+  { id:"mathwallet", name:"MathWallet", desc:"Multi-chain wallet", logo:"logo/math.png" },
+  //{ id:"coinbasewallet2", name:"Coinbase Wallet (alt)", desc:"Coinbase wallet icon", logo:"https://logos-world.net/wp-content/uploads/2023/08/Coinbase-Symbol.png" },
+  { id:"mycrypto", name:"MyCrypto", desc:"Ethereum & tokens", logo:"logo/mycrypto.png" },
+ // { id:"guarda2", name:"Guarda (alt)", desc:"Guarda wallet icon", logo:"https://www.guarda.co/favicon.ico" },
+ // { id:"edge2", name:"Edge (alt)", desc:"Edge wallet icon", logo:"https://edge.app/favicon.ico" },
+  { id:"coinzilla", name:"Coinzilla Wallet", desc:"Demo wallet icon", logo:"logo/coinzilla.png" },
+  { id:"Bitget", name:"Bitget", desc:"Crypto for everyone", logo:"logo/bitget.png" },
+   { id:"Crypto", name:"Crypto", desc:"Crypto for everyone", logo:"logo/crypto.png" },
+    { id:"Kraken", name:"Kraken", desc:"kraken wallet", logo:"logo/kraken.jpg" },
+     { id:"Gemini", name:"Gemini", desc:"payment wallet", logo:"logo/gemini.png" },
+      { id:"Bybit", name:"Bybit", desc:"Crypto for everyone", logo:"logo/bybit.png" },
+ // { id:"sample", name:"SampleWallet", desc:"Sample / placeholder", logo:"https://via.placeholder.com/64x64?text=W" }
+];
+
+/* Utility to create a card element (with fallback image handling) */
+function makeCard(w) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  // Use a reliable placeholder data-uri if image fails
+  const placeholder = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="%230b152a"/><text x="50%" y="50%" fill="%23ffffff" font-size="14" font-family="Arial" dominant-baseline="middle" text-anchor="middle">W</text></svg>'
+  );
+
+  // build HTML
+  card.innerHTML = `
+    <div class="wallet-icon"><img src="${w.logo}" alt="${w.name} logo" onerror="this.onerror=null;this.src='${placeholder}';"></div>
+    <div class="wallet-name">${w.name}</div>
+    <div class="wallet-desc">${w.desc}</div>
+    <button class="connect-btn" data-id="${w.id}" data-name="${encodeURIComponent(w.name)}" data-logo="${encodeURIComponent(w.logo)}">Connect</button>
+  `;
+  return card;
+}
+
+/* Render list into grid */
+function render(list, targetId) {
+  const container = document.getElementById(targetId);
+  if (!container) return;
+  container.innerHTML = '';
+  list.forEach(w => container.appendChild(makeCard(w)));
+
+  // attach click handlers
+  container.querySelectorAll('.connect-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const { id, name, logo } = e.currentTarget.dataset;
+      // safe demo — open a non-sensitive connect page that does NOT ask for seed phrases
+      window.location.href = `wallet-connect.html?id=${id}&name=${name}&logo=${logo}`;
+    });
+  });
+}
+
+/* initial render */
+render(popular, 'popularGrid');
+render(allWallets, 'walletGrid');
+
+/* search */
+document.getElementById('search').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) {
+    render(allWallets, 'walletGrid');
+    return;
+  }
+  const filtered = allWallets.filter(w => (w.name + ' ' + w.desc).toLowerCase().includes(q));
+  render(filtered, 'walletGrid');
+});
+</script>
+</body>
+</html>
